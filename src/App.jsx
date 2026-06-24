@@ -313,10 +313,28 @@ function App() {
     }
   };
 
-  const copySMILES = () => {
+  const copySMILES = async () => {
     if (activeCompound && activeCompound.smiles) {
-      navigator.clipboard.writeText(activeCompound.smiles);
-      showToast('SMILES가 클립보드에 복사되었습니다.', 'success');
+      try {
+        await navigator.clipboard.writeText(activeCompound.smiles);
+        showToast('SMILES가 클립보드에 복사되었습니다.', 'success');
+      } catch (err) {
+        try {
+          const textArea = document.createElement("textarea");
+          textArea.value = activeCompound.smiles;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          textArea.remove();
+          showToast('SMILES가 클립보드에 복사되었습니다.', 'success');
+        } catch (e) {
+          showToast('복사에 실패했습니다. 브라우저 설정을 확인해주세요.', 'error');
+        }
+      }
     }
   };
 
