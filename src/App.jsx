@@ -106,6 +106,17 @@ function App() {
     return text;
   };
 
+  const renderFormula = (formula) => {
+    if (!formula) return null;
+    const parts = formula.split(/(\d+)/);
+    return parts.map((part, i) => {
+      if (/\d+/.test(part)) {
+        return <sub key={i}>{part}</sub>;
+      }
+      return part;
+    });
+  };
+
   const parseGHSFromPubChem = (json) => {
     const results = { pictograms: [], hazardStatements: [], precautionaryStatements: [], signalWord: null };
     const picSet = new Set();
@@ -587,8 +598,8 @@ function App() {
                     {activeCompound.iupac}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-sm font-bold tracking-wider">
-                      분자식: {activeCompound.formula}
+                    <span className="bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-sm font-bold tracking-wider flex items-baseline">
+                      분자식: <span className="ml-1">{renderFormula(activeCompound.formula)}</span>
                     </span>
                     {activeCompound.exactMass && (
                       <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-sm font-bold tracking-wider">
