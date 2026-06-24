@@ -91,6 +91,21 @@ function App() {
     return text;
   };
 
+  const translateEnToKo = async (text) => {
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ko`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        let translated = data.responseData.translatedText;
+        if (translated) return translated.trim();
+      }
+    } catch (e) {
+      console.warn("EN->KO Translation offline.");
+    }
+    return text;
+  };
+
   const parseGHSFromPubChem = (json) => {
     const results = { pictograms: [], hazardStatements: [], precautionaryStatements: [], signalWord: null };
     const picSet = new Set();
@@ -166,7 +181,7 @@ function App() {
       }
 
       // 1. PubChem Basic
-      const pubchemRes = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(finalQuery)}/property/Title,MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,XLogP,HBondDonorCount,HBondAcceptorCount,Charge/JSON`);
+      const pubchemRes = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(finalQuery)}/property/Title,MolecularFormula,ExactMass,MolecularWeight,CanonicalSMILES,IUPACName,XLogP,HBondDonorCount,HBondAcceptorCount,Charge/JSON`);
       if (!pubchemRes.ok) throw new Error(`'${finalQuery}'에 대한 검색 결과를 찾을 수 없습니다. 이름이나 CAS 번호를 확인해주세요.`);
       
       const pubchemJson = await pubchemRes.json();
@@ -192,6 +207,17 @@ function App() {
                    }
                 });
              }
+          }
+          // Description
+          const namesSection = sections.find(s => s.TOCHeading === 'Names and Identifiers');
+          if (namesSection) {
+            const descSection = namesSection.Section?.find(s => s.TOCHeading === 'Record Description');
+            if (descSection && descSection.Information && descSection.Information.length > 0) {
+              const engDesc = descSection.Information[0].Value?.StringWithMarkup?.[0]?.String;
+              if (engDesc) {
+                extraProps.description = await translateEnToKo(engDesc);
+              }
+            }
           }
           // GHS
           const safetySection = sections.find(s => s.TOCHeading === 'Safety and Hazards');
@@ -247,19 +273,21 @@ function App() {
 
       setActiveCompound({
         cid,
-        title: props.Title || finalQuery,
-        formula: props.MolecularFormula || 'N/A',
-        mw: parseFloat(props.MolecularWeight) || 0,
-        smiles: props.CanonicalSMILES || '',
+        title: props.Title || q,
+        formula: props.MolecularFormula,
+        exactMass: props.ExactMass,
+        mw: props.MolecularWeight,
+        smiles: props.CanonicalSMILES,
         iupac: props.IUPACName || 'N/A',
         logp: props.XLogP !== undefined ? parseFloat(props.XLogP) : 0.0,
-        donor: props.HBondDonorCount !== undefined ? parseInt(props.HBondDonorCount) : 0,
-        acceptor: props.HBondAcceptorCount !== undefined ? parseInt(props.HBondAcceptorCount) : 0,
-        charge: props.Charge !== undefined ? parseInt(props.Charge) : 0,
-        extraProps,
+        donor: props.HBondDonorCount || 0,
+        acceptor: props.HBondAcceptorCount || 0,
+        charge: props.Charge || 0,
         ghs: ghsData,
-        sdf3D,
-        chembl: chemblData
+        extraProps,
+        description: extraProps.description,
+        chembl: chemblData,
+        sdf3D
       });
       setSearchTerm(finalQuery);
       setSearchHistory(prev => {
@@ -553,13 +581,22 @@ function App() {
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-stone-200/80 pb-6">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-4xl font-extrabold text-stone-900">{activeCompound.title}</h2>
-                  <span className="bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-sm font-bold tracking-wider">{activeCompound.formula}</span>
+                <h2 className="text-4xl font-extrabold text-stone-900 mb-2">{activeCompound.title}</h2>
+                <div className="flex flex-col items-start gap-2">
+                  <p className="text-stone-500 text-sm font-mono bg-stone-100 px-3 py-1.5 rounded-lg inline-block border border-stone-200">
+                    {activeCompound.iupac}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-sm font-bold tracking-wider">
+                      분자식: {activeCompound.formula}
+                    </span>
+                    {activeCompound.exactMass && (
+                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-sm font-bold tracking-wider">
+                        Exact Mass: {activeCompound.exactMass}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-stone-500 text-sm font-mono bg-stone-100 px-3 py-1.5 rounded-lg inline-block border border-stone-200">
-                  {activeCompound.iupac}
-                </p>
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
                 <button onClick={addToDeck} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#b45309] hover:bg-[#92400e] text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all text-sm">
@@ -692,6 +729,18 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {/* Description Section */}
+            {activeCompound.description && (
+              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 mb-4 flex items-center gap-2">
+                  <FileText size={18} className="text-blue-700" /> 화합물 설명 (Description)
+                </h3>
+                <p className="text-stone-700 leading-relaxed whitespace-pre-wrap text-sm">
+                  {activeCompound.description}
+                </p>
+              </div>
+            )}
 
             {/* Third Grid: ChEMBL & Bioactivity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
