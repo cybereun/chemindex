@@ -592,7 +592,7 @@ function App() {
           </div>
         </aside>
 
-        <main className="flex-1 w-full p-4 lg:p-8 flex flex-col gap-8 overflow-y-auto h-[calc(100vh-80px)]">
+        <main className="flex-1 w-full p-3 sm:p-4 lg:p-8 flex flex-col gap-6 sm:gap-8 overflow-y-auto h-[calc(100vh-80px)] min-w-0">
         {loading ? (
           <div className="flex-1 flex flex-col justify-center items-center">
             <Loader2 className="animate-spin text-amber-700 mb-4" size={48} />
@@ -771,10 +771,10 @@ function App() {
               </div>
             )}
 
-            {/* Third Grid: ChEMBL & Bioactivity */}
+            {/* Third Grid: ChEMBL & Bioactivity - side by side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* ChEMBL Data */}
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
+              {/* ChEMBL Clinical Data */}
+              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm flex flex-col">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 mb-4 flex items-center gap-2">
                   <Activity size={18} className="text-emerald-700" /> 임상 및 약리 데이터 (ChEMBL)
                 </h3>
@@ -790,8 +790,8 @@ function App() {
                         <div className="font-bold text-stone-800">{activeCompound.chembl.moleculeType || 'N/A'}</div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-3">
+
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className="text-xs text-stone-500">Therapeutic Status:</span>
                       {activeCompound.chembl.therapeuticFlag ? 
                         <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold">의약품 승인 (Therapeutic)</span> : 
@@ -818,44 +818,44 @@ function App() {
                     )}
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-stone-50 p-4 rounded-xl border border-stone-100 text-stone-400 text-sm text-center">
+                  <div className="flex-1 flex items-center justify-center bg-stone-50 p-6 rounded-xl border border-stone-100 text-stone-400 text-sm text-center">
                     이 화합물에 대한 ChEMBL 임상 약리 데이터가 존재하지 않습니다.
                   </div>
                 )}
               </div>
 
               {/* Bioactivity */}
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
+              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm flex flex-col">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 mb-4 flex items-center gap-2">
                   <Star size={18} className="text-emerald-700" /> 생물학적 활성 (CHEMBL BIOACTIVITY PROFILES)
                 </h3>
                 {activeCompound.chembl && activeCompound.chembl.bioactivities?.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
+                    <table className="w-full text-left text-sm">
                       <thead>
                         <tr className="text-stone-500 border-b border-stone-200">
-                          <th className="pb-3 font-semibold">CHEMBL ID / ASSAY ID</th>
-                          <th className="pb-3 font-semibold px-4">표적 단백질 (TARGET NAME)</th>
-                          <th className="pb-3 font-semibold px-4">측정 유형 (TYPE)</th>
-                          <th className="pb-3 font-semibold px-4">활성 정량치 (VALUE)</th>
-                          <th className="pb-3 font-semibold">기준 규격</th>
+                          <th className="pb-3 font-semibold pr-3 whitespace-nowrap">CHEMBL ID</th>
+                          <th className="pb-3 font-semibold px-3">표적 단백질</th>
+                          <th className="pb-3 font-semibold px-3 hidden xl:table-cell">TYPE</th>
+                          <th className="pb-3 font-semibold px-3 whitespace-nowrap">VALUE</th>
+                          <th className="pb-3 font-semibold hidden xl:table-cell">단위</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-stone-100">
                         {activeCompound.chembl.bioactivities.map((act, i) => (
                           <tr key={i} className="hover:bg-stone-50 transition-colors">
-                            <td className="py-3 font-medium text-amber-700">{act.targetId}</td>
-                            <td className="py-3 px-4 text-stone-700">{act.targetName || 'Unknown Target'}</td>
-                            <td className="py-3 px-4 text-stone-600">{act.type}</td>
-                            <td className="py-3 px-4 font-bold text-teal-700">{act.value}</td>
-                            <td className="py-3 text-stone-400">{act.units || 'nM'}</td>
+                            <td className="py-3 pr-3 font-medium text-amber-700 whitespace-nowrap text-xs">{act.targetId}</td>
+                            <td className="py-3 px-3 text-stone-700 text-xs">{act.targetName || 'Unknown Target'}</td>
+                            <td className="py-3 px-3 text-stone-600 hidden xl:table-cell whitespace-nowrap text-xs">{act.type}</td>
+                            <td className="py-3 px-3 font-bold text-teal-700 whitespace-nowrap text-xs">{act.value}</td>
+                            <td className="py-3 text-stone-400 hidden xl:table-cell whitespace-nowrap text-xs">{act.units || 'nM'}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center bg-stone-50 p-4 rounded-xl border border-stone-100 text-stone-400 text-sm text-center">
+                  <div className="flex-1 flex items-center justify-center bg-stone-50 rounded-xl border border-stone-100 text-stone-400 text-sm text-center p-6">
                     생물학적 활성 프로필 데이터가 없습니다.
                   </div>
                 )}
@@ -954,8 +954,8 @@ function App() {
         )}
         </main>
 
-        {/* Right Sidebar (History) */}
-        <aside className="w-72 border-l border-stone-200 bg-[#fdfcf8] flex flex-col overflow-y-auto h-[calc(100vh-80px)] p-5 flex-shrink-0">
+        {/* Right Sidebar (History) - hidden on mobile */}
+        <aside className="hidden lg:flex w-72 border-l border-stone-200 bg-[#fdfcf8] flex-col overflow-y-auto h-[calc(100vh-80px)] p-5 flex-shrink-0">
           <h3 className="text-sm font-bold text-stone-600 flex items-center gap-2 mb-4">
             <Clock size={16} className="text-stone-400" /> 최근 검색 기록
           </h3>
