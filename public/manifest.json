@@ -1,26 +1,21 @@
 {
   "name": "ChemIndex",
   "short_name": "ChemIndex",
-  "description": "Interactive Chemical Intelligence Dashboard - PubChem & ChEMBL 기반 화합물 탐색기",
+  "description": "Interactive Chemical Intelligence Dashboard",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fdfcf8",
-  "theme_color": "#92400e",
-  "orientation": "portrait-primary",
+  "background_color": "#f5f5f4",
+  "theme_color": "#f5f5f4",
   "icons": [
     {
       "src": "/logo192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/logo512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
-  ],
-  "categories": ["education", "utilities"],
-  "lang": "ko"
+  ]
 }
